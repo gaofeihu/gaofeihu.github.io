@@ -5,7 +5,7 @@ header-img: img/head.jpeg
 email: silence@tom.com
 description: "love work，love life."
 keyword: "silence, silence, silence的博客, silence, silence, iOS, Apple, iPhone"
-url: "http://gaofeihu.github.io"          # your host, for absolute URL
+url: "http://ichina.club"          # your host, for absolute URL
 baseurl: ""      # for example, '/blog' if your blog hosted on 'host/blog'
 github_repo: "https://github.com/gaofeihu/gaofeihu.github.io" # you code repository
 
