@@ -2,7 +2,7 @@
 layout:     post
 title:  Heartbeat + Nginx
 subtitle: Heartbeat + Nginx
-date:       2020-1-8
+date:       2020-1-17
 author:     silence
 header-img: img/post-linux.png
 catalog: true
