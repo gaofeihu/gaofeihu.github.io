@@ -370,3 +370,12 @@ iptables -t filter -I INPUT -p icmp --icmp-type 0 -j ACCEPT
 iptables -t filter -A INPUT -p icmp -DROP
 ```
 
+
+
+```
+rpm -e --nodeps firewalld
+yum -y install iptables-services 
+systemctl start iptables 
+systemctl enable iptables
+```
+
