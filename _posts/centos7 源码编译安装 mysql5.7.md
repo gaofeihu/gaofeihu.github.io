@@ -36,7 +36,7 @@ tar -zxvf mysql-boost-5.7.25.tar.gz
 #### 6. 切换到mysql目录下，编译安装
 
 ```
-cmake -DCMAKE_INSTALL_PREFIX=/usr/local/mysql -DDEFAULT_CHARSET=utf8 -DDEFAULT_COLLATION=utf8_general_ci -DWITH_BOOST=boost 
+cmake -DCMAKE_INSTALL_PREFIX=/usr/local/mysql -DDEFAULT_CHARSET=utf8mb4 -DDEFAULT_COLLATION=utf8mb4_general_ci -DWITH_BOOST=boost 
 make && make install
 ```
 
@@ -54,23 +54,22 @@ chown -R mysql:mysql /usr/local/mysql
 cp -a my.cnf my.cnf.back
 ```
 
-```bash
-
+```properties
 [client]
 port        = 3306
 socket      = /tmp/mysql.sock
+default-character-set = utf8mb4
 
 [mysqld]
-port        = 3306
+port        = 12306
 socket      = /tmp/mysql.sock
 user = mysql
-
 
 basedir = /usr/local/mysql
 datadir = /data/mysql/data
 pid-file = /data/mysql/mysql.pid
-
 log_error = /data/mysql/mysql-error.log
+
 slow_query_log = 1
 long_query_time = 1
 slow_query_log_file = /data/mysql/mysql-slow.log
@@ -91,18 +90,20 @@ tmp_table_size = 32M
 performance_schema_max_table_instances = 1000
 
 explicit_defaults_for_timestamp = true
-#skip-networking
+
 max_connections = 500
 max_connect_errors = 100
 open_files_limit = 65535
 
 log_bin=mysql-bin
+log_bin_trust_function_creators=1
 binlog_format=mixed
-server_id   = 232
+server_id = 232
 expire_logs_days = 10
 early-plugin-load = ""
 
 default_storage_engine = InnoDB
+innodb_file_per_table = ON
 innodb_file_per_table = 1
 innodb_buffer_pool_size = 128M
 innodb_log_file_size = 32M
@@ -110,12 +111,18 @@ innodb_log_buffer_size = 8M
 innodb_flush_log_at_trx_commit = 1
 innodb_lock_wait_timeout = 50
 
+character-set-client-handshake = FALSE
+character-set-server = utf8mb4
+collation-server = utf8mb4_unicode_ci
+init_connect=’SET NAMES utf8mb4’
+
 [mysqldump]
 quick
 max_allowed_packet = 16M
 
 [mysql]
 no-auto-rehash
+default-character-set=utf8mb4
 
 [myisamchk]
 key_buffer_size = 32M
@@ -149,13 +156,25 @@ service mysqld start|stop|restart
 ##### **2.7** 给 **mysql** 的 **root** 用户设置密码 
 
 ```bash
-/usr/local/mysql/bin/mysqladmin -uroot password 123qwe
+# 设定root账号及密码,由于原密码为空,因此-p可以不用
+/usr/local/mysql/bin/mysqladmin  -u root password '123qwe!@#' 
 ```
+
+##### 编辑profile,将mysql的可执行路径加入系统PATH
+```bash
+vim /etc/profile 
+
+export PATH=/usr/local/mysql/bin:$PATH
+
+source /etc/profile //重读环境变量,使PATH生效。
+```
+
+
 
 #### root用户远程登录
 
 ```
-GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY '123qwe!@#'  
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY '123qwe!@#'; 
 flush privileges; 
 ```
 
