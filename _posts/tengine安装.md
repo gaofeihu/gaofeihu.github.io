@@ -1,4 +1,4 @@
-### nginx安装
+###  nginx安装
 
 #### 下载相关软件
 
@@ -585,7 +585,6 @@ error_page 500 502 503 504 404 /404.html;
 	location @err{
 		default_type application/json;
 		add_header Content-Type 'text/html; charset=utf-8';
-		return 0 '{"@timestamp":"$time_iso8601","host":"$server_addr","clientip":"$remote_addr","status":"$status"}';
 	}
 
 ```
