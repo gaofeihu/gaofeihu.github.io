@@ -36,8 +36,7 @@ tar -zxvf mysql-boost-5.7.25.tar.gz
 #### 6. 切换到mysql目录下，编译安装
 
 ```
-cmake -DCMAKE_INSTALL_PREFIX=/usr/local/mysql -DDEFAULT_CHARSET=utf8mb4 -DDEFAULT_COLLATION=utf8mb4_general_ci -DWITH_BOOST=boost 
-make && make install
+cmake -DCMAKE_INSTALL_PREFIX=/usr/local/mysql -DDEFAULT_CHARSET=utf8mb4 -DDEFAULT_COLLATION=utf8mb4_general_ci -DWITH_BOOST=boost &&  make && make install
 ```
 
 修改安装后的目录权限 

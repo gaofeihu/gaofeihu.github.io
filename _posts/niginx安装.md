@@ -31,6 +31,13 @@ useradd -M -s /sbin/nologin nginx
 
 # vim src/http/ngx_http_header_filter_module.c
 static u_char ngx_http_server_string[] = "Server: BAZINGA" CRLF;
+
+
+sed 's/nginx\//FEHU/gp' /opt/nginx-1.16.1/src/core/nginx.h -n
+sed 's/"NGINX"/"FEHU"/gp' /opt/nginx-1.16.1/src/core/nginx.h -n
+sed 's/nginx"/"FEHU"/gp' /opt/nginx-1.16.1/src/http/ngx_http_header_filter_module.c -n
+
+
 ```
 
 
@@ -104,6 +111,33 @@ echo "nginx $1 success!"
 exit 0
 ```
 
+```properties
+ # vim /usr/lib/systemd/system/nginx.service
+ # centos7
+[Unit]
+Description=nginx server
+After=network.target remote-fs.target nss-lookup.target
+
+[Service]
+Type=simple
+EnvironmentFile=/usr/local/nginx/conf/nginx.conf
+PIDFile=/usr/local/nginx/logs/nginx.pid
+ExecStart=/usr/local/nginx/sbin/nginx 
+ExecReload=/usr/local/nginx/sbin/nginx -s reload
+ExecStop=/usr/local/nginx/sbin/nginx -s quit
+
+KillSignal=SIGCONT
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+
+systemctl daemon-reload
+systemctl enable nginx
+```
+
+
+
 #### nginx服务设置为开机自启
 
 ```bash
@@ -116,7 +150,7 @@ chkconfig nginx on
 chkconfig --list nginx
 
 #启动nginx 
-service nginx start|stop|restart|reload
+  service nginx start|stop|restart|reload
 
 ```
 
@@ -220,6 +254,7 @@ http
     log_format access '{"@timestamp":"$time_iso8601",'
             '"host":"$server_addr",'
             '"clientip":"$remote_addr",'
+            '"http_upgrade":"$http_upgrade",'
             '"size":$body_bytes_sent,'
             '"responsetime":$request_time,'
             '"upstreamtime":"$upstream_response_time",'
@@ -334,6 +369,20 @@ openssl req -new -key fehu.key -out fehu.csr
 openssl x509 -req -days 3650 -sha256 -in fehu.csr -signkey fehu.key -out fehu.crt
 
 # 将私钥和证书复制到指定位置
+```
+
+```
+一条命令生成自签名证书
+openssl req -newkey rsa:2048 -nodes -sha256 -keyout domain.key -x509 -days 3650 -out domain.crt -subj "/C=CN/ST=北京市/L=东城区/O=中国光大银行/OU=科技部/CN=ebank.com"
+subj参数说明如下：
+
+字段    字段含义    示例
+/C=    Country 国家    CN
+/ST=    State or Province 省    Guangdong
+/L=    Location or City 城市    Guangzhou
+/O=    Organization 组织或企业    xdevops
+/OU=    Organization Unit 部门    xdevops
+/CN=    Common Name 域名或IP    gitlab.xdevops.cn
 ```
 
 
@@ -549,5 +598,89 @@ http
         return 301 https://$server_name$request_uri; #永久重定向到 https 站点
     }
 }
+```
+
+
+
+```shell
+#!/bin/bash
+#***********************************************
+#Author:        FeHu
+#Mail:          fehu.asia@gmail.com
+#Version:       1.0
+#Date:          2020-11-27
+#FileName:      installNginx.sh
+#Description:   The test script
+#***********************************************
+
+cd /opt 
+echo '开始下载安装包'
+wget http://nginx.org/download/nginx-1.16.1.tar.gz
+echo '下载安装包完毕'
+echo '开始解压'
+tar -zxvf nginx-1.16.1.tar.gz  && cd nginx-1.16.1
+echo '解压完毕'
+echo '开始安装依赖'
+yum install -y gcc gcc-c++  openssl-devel  pcre pcre-devel  zlib zlib-devel
+echo '依赖安装完毕'
+useradd -M -s /sbin/nologin nginx
+./configure --prefix=/usr/local/nginx --user=nginx --group=nginx   --with-http_stub_status_module --with-http_ssl_module --with-http_flv_module --with-http_gzip_static_module --with-http_realip_module --with-http_sub_module && make && make install
+cat > /usr/lib/systemd/system/nginx.service << EOF
+[Unit]
+Description=nginx server
+After=network.target remote-fs.target nss-lookup.target
+
+[Service]
+Type=simple
+EnvironmentFile=/usr/local/nginx/conf/nginx.conf
+PIDFile=/usr/local/nginx/logs/nginx.pid
+ExecStart=/usr/local/nginx/sbin/nginx 
+ExecReload=/usr/local/nginx/sbin/nginx -s reload
+ExecStop=/usr/local/nginx/sbin/nginx -s quit
+
+KillSignal=SIGCONT
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+
+EOF
+systemctl enable nginx
+systemctl start  nginx
+echo 'over'
+
+```
+
+### 默认配置
+
+```properties
+    server {
+        listen       443 ssl http2 default_server;
+        listen       [::]:443 ssl http2 default_server;
+        server_name  _;
+        root         /usr/share/nginx/html;
+
+        ssl_certificate "/etc/pki/nginx/server.crt";
+        ssl_certificate_key "/etc/pki/nginx/private/server.key";
+        ssl_session_cache shared:SSL:1m;
+        ssl_session_timeout  10m;
+        ssl_ciphers HIGH:!aNULL:!MD5;
+        ssl_prefer_server_ciphers on;
+
+        # Load configuration files for the default server block.
+        include /etc/nginx/default.d/*.conf;
+
+        location / {
+        }
+
+        error_page 404 /404.html;
+        location = /404.html {
+        }
+
+        error_page 500 502 503 504 /50x.html;
+        location = /50x.html {
+        }
+    }
+
 ```
 
